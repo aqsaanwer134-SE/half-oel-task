@@ -1,63 +1,41 @@
-# Task 1 – Requirement Extraction
+# Task 1: Requirement Extraction (Baseline v1.0)
 
-
-
-## Description
-
-The scenario describes a fleet of autonomous robots that carry vaccines in a sealed conservation chamber from a warehouse to remote clinics. Mission Control supervises the robots over a slow link (delay of several seconds). The scenario contains many sentences, but not every sentence is a usable requirement. As Software Quality Engineering Lead I did the following:
-
+Format: **Req. ID | Requirement | Type | Priority | Verification Method**
+Verification methods: **T** = Test, **S** = Simulation / fault injection, **I** = Inspection, **A** = Analysis, **D** = Demonstration.
+Thresholds come from the global assumptions in `README.md`.
 
 ## 1. Functional Requirements (10)
 
-**What this table shows:** the behaviour the system must perform. FR-01 and FR-02 cover the command chain (authentication, validation). FR-03 to FR-06 cover the robot life-cycle (navigation, obstacle, delivery, battery). FR-07 covers Safe Mode. FR-08 and FR-09 cover the chamber (self-check, correction with protection). FR-10 covers telemetry and logging.
-
 | Req. ID | Requirement | Type | Priority | Verification Method |
 |---|---|---|---|---|
-| FR-01 | Only authenticated operators shall be permitted to issue robot commands. | FR | High | Test (valid/invalid login, command without session) |
-| FR-02 | The system shall validate every received command (operator role permission, command syntax, target robot ID exists, timestamp not older than 30 s) and shall reject an invalid command with an error code, without changing the robot state. | FR | High | Test (negative test set per validation rule) |
-| FR-03 | The robot shall accept a valid DeliveryRequest only in IDLE, shall enter NAVIGATING within 2 s of acceptance and shall report the new state to Mission Control. | FR | High | Test (timed, instrumented robot simulator) |
-| FR-04 | While NAVIGATING the robot shall check for obstacles at least every 100 ms. On detection it shall suspend navigation and enter AVOIDING_OBSTACLE, and it shall resume NAVIGATING when the obstacle is cleared. Package delivery shall not start while the obstacle is being handled. | FR | High | Test + Simulation (obstacle injection) |
-| FR-05 | The robot shall enter DELIVERING only from NAVIGATING on DestinationReached (within 2 m of the destination). It shall release the package only after the chamber is verified safe, and on completion it shall enter RETURNING. | FR | High | Test + Model check of transition table |
-| FR-06 | If battery capacity falls to 20 % or lower (critical) during NAVIGATING or AVOIDING_OBSTACLE, the robot shall abandon the delivery and enter RETURNING, and shall enter IDLE on arrival at the warehouse. | FR | High | Test (battery profile injection) |
-| FR-07 | The robot shall enter Safe Mode when a critical battery or thermal condition is detected. | FR | High | Test (fault injection) |
-| FR-08 | At power-on the chamber shall self-check temperature, humidity, vibration, door and power sensors and shall enter monitoring only if all pass. If any fails, it shall raise an operator alert and block conservation. | FR | High | Test (sensor fault injection) |
-| FR-09 | When temperature or humidity leaves the loaded batch limits, the chamber shall start correction and confirm by sensor readings that the value is back in range. If not confirmed within 120 s it shall enter protection mode, reduce light exposure and alert the operator. | FR | High | Test + Simulation (thermal model) |
-| FR-10 | The robot shall send telemetry (state, temperature, humidity, vibration, door, battery, position) every 5 s. The system shall log each command event (received, authenticated, executed, status reported) with timestamp, operator ID, robot ID and outcome. | FR | Medium | Test + Inspection of log records |
+| FR-01 | Only authenticated operators shall be permitted to issue robot commands. A command from an unauthenticated session shall be rejected, the robot state left unchanged, and the rejection logged. | FR | High | T: negative tests with no, expired and forged tokens |
+| FR-02 | After authentication, the robot shall validate every command (known command type, destination is one of the 20 registered clinics, parameters in range). An invalid command shall be rejected with a reason code and no state change. | FR | Medium | T: boundary and invalid-parameter tests |
+| FR-03 | On a validated DeliveryRequest while IDLE with battery above CriticalBattery, the robot shall enter NAVIGATING and send a status report to Mission Control. | FR | High | T: state-transition test |
+| FR-04 | While NAVIGATING or RETURNING, on obstacle detection the robot shall suspend navigation and enter AVOIDING_OBSTACLE. When the obstacle is cleared it shall resume the previous activity. | FR | Medium | T, S: obstacle injection |
+| FR-05 | The robot shall enter DELIVERING only from NAVIGATING after DestinationReached. After DeliveryComplete it shall travel back to the warehouse and become IDLE on arrival. | FR | High | T, A: transition analysis |
+| FR-06 | The robot shall enter Safe Mode when a critical battery or thermal condition is detected. | FR | High | S: fault injection |
+| FR-07 | The chamber shall run a self-check at power-on and enter monitoring only if all essential sensors pass. It shall start conservation only when the door is closed and the batch profile is loaded. On door opening during conservation it shall suspend normal operation and resume only after conditions and sensors are verified. | FR | High | T, D |
+| FR-08 | On out-of-range temperature or humidity the chamber shall start correction and confirm from sensor readings that the value is back in range. If it is not back in range within the recovery period, the chamber shall enter protection mode, reduce light exposure and alert the operator. | FR | High | S: heater/cooler fault injection |
+| FR-09 | For each command the system shall report status to Mission Control and write a log record containing timestamp, robot ID, operator ID, command ID, authentication result, execution result and resulting state. | FR | Medium | T, I: log inspection |
+| FR-10 | The system shall support communication with multiple robots simultaneously. | FR | High | T: multi-robot load test |
 
 ## 2. Non-Functional Requirements (5)
 
-**What this table shows:** the quality attributes that decide *how well* the system works. Each NFR is tied to one of the five categories requested (performance, scalability, security, reliability, usability) and has a measurable limit (seconds, percentages, counts) so that a test can decide pass or fail.
+| Req. ID | Requirement | Type | Priority | Verification Method |
+|---|---|---|---|---|
+| NFR-01 (Performance) | Authentication, authorisation and validation of a command shall finish in <= 500 ms on the robot. The acknowledgement and every state-change report shall reach Mission Control within <= 10 s of the triggering event with a one-way link delay of up to 5 s. | NFR | High | T: timed tests with delay emulator |
+| NFR-02 (Security) | All command and telemetry traffic shall be encrypted (TLS 1.2 or higher). Operator sessions shall expire after 15 min of inactivity. 100 % of accepted commands shall carry a valid signed session token. | NFR | High | T, I: protocol capture and review |
+| NFR-03 (Scalability) | Mission Control shall process telemetry from 20 robots (1 message per 10 s each) with command acknowledgement <= 10 s and CPU <= 70 %, and shall grow to 40 robots by configuration only. | NFR | Medium | T: load test with 20 and 40 simulated robots |
+| NFR-04 (Reliability) | Mission Control availability shall be >= 99.5 % per month. During a link outage of up to 4 h the robot shall buffer 100 % of chamber and event records and upload them in order on reconnection. Chamber temperature shall stay within range for >= 99.5 % of mission time. | NFR | High | A: availability analysis; T: link-outage test |
+| NFR-05 (Usability) | After 2 h of training, a Dispatcher shall issue a delivery command and see its confirmation in <= 60 s with <= 5 clicks. Critical alerts shall appear in a distinct colour within 2 s of receipt. | NFR | Medium | T: usability trial, 10 operators |
+
+## 3. High-Risk (Safety-Critical) Requirements (4)
 
 | Req. ID | Requirement | Type | Priority | Verification Method |
 |---|---|---|---|---|
-| NFR-01 (Performance) | Server-side authentication, authorisation and validation of a command shall complete in at most 1 s for 95 % of commands under a 20-robot load. Status shall appear on the operator console within (link delay + 2 s). | NFR | High | Performance test (load script, timestamps) |
-| NFR-02 (Scalability) | The system shall support communication with multiple robots simultaneously. | NFR | Medium | Load test |
-| NFR-03 (Security) | Command and telemetry channels shall use TLS 1.2 or higher. An account shall lock after 5 failed logins, a session shall expire after 15 min of inactivity and passwords shall be stored hashed with salt. | NFR | High | Security test + Inspection |
-| NFR-04 (Reliability) | No committed log entry shall be lost (0 lost entries in 100 power-loss/link-loss trials). A robot shall buffer at least 24 h of telemetry during link loss and upload it on restoration. Mission Control availability shall be at least 99.5 % per month. | NFR | High | Fault-injection test + Analysis of uptime logs |
-| NFR-05 (Usability) | A trained operator shall issue a delivery request in at most 4 interactions and 60 s. Critical alerts shall be shown in colour with sound within 2 s of arrival. At least 90 % of test operators shall finish the task without help. | NFR | Low | Usability test with 10 operators |
+| SR-01 (Railway crossing) | The robot shall enter the level crossing only if the latest ARLCCS message (age <= 2 s) reports Barrier_Open = TRUE and no train approaching or present. Otherwise it shall stop >= 5 m before the crossing and request clearance again. | Safety | Critical | S: ARLCCS simulator with stale, failed and conflicting inputs |
+| SR-02 (Link-dependent) | If no heartbeat arrives for 30 s, the robot shall enter LINK_LOST, stop at a safe holding point (never on or within 5 m of the railway), keep the chamber controlled, and start an autonomous return to the warehouse after 120 s. | Safety | Critical | S: link-cut tests in each state |
+| SR-03 (Chamber protection) | If correction fails within the recovery period (10 min), the chamber shall enter protection mode and alert the operator within 5 s. Batch removal shall be blocked while protection is active. | Safety | Critical | S: fault injection |
+| SR-04 (Delivery guard) | The robot shall never begin DELIVERING from IDLE or from AVOIDING_OBSTACLE. DELIVERING shall be reachable only from NAVIGATING at the destination. | Safety | Critical | A: model checking; T: negative transition tests |
 
-Note: NFR-02 is deliberately kept at baseline wording (not measurable); CR-02 makes it measurable.
-
-## 3. High-Risk Requirements (4)
-
-**What this table shows:** the requirements where a failure could cause physical harm or loss of medicine. They are *safety-critical* (railway crossing, door interlock), *real-time* (Safe Mode timing, handled in FR-07/CR-01) and *link-dependent* (link loss). These four receive the strongest verification effort: model checking, fault injection and simulation.
-
-| Req. ID | Requirement | Type | Priority | Verification Method |
-|---|---|---|---|---|
-| SAF-01 | The robot shall enter the railway level-crossing only when ARLCCS reports barrier open AND no train approaching, with a status message not older than 2 s. Otherwise it shall stop before the crossing and alert the operator. | Safety | High | Test + Simulation (train/barrier scenarios) |
-| SAF-02 | The chamber door shall stay locked unless the robot is stopped with handover authorised. If the door opens in any other situation, the system shall alert within 1 s and enter Safe Mode within 3 s. | Safety | High | Test (door fault injection) |
-| SAF-03 | If no heartbeat is received for 10 s, the robot shall enter LINK_LOST, stop at a safe location (never on the crossing), keep monitoring the chamber and buffer data. After 60 s without link it shall return autonomously to the warehouse. | Safety | High | Test (link cut-off) + Simulation |
-| SAF-04 | The robot shall never begin DELIVERING directly from IDLE and never while in AVOIDING_OBSTACLE. Such requests shall be rejected and logged. | Safety | High | Model check + Test (illegal event injection) |
-
-## Summary
-
-The baseline contains **19 requirements**. All High-priority items are verified by test plus model check or fault injection. Three baseline statements (FR-01, FR-07, NFR-02) are intentionally the least precise ones, and they are the ones Mission Control improves in Task 2.
-
-| Category | Count |
-|---|---|
-| Functional | 10 |
-| Non-functional | 5 |
-| High-risk (Safety) | 4 |
-| **Total** | **19** |
-
-
+Total: 10 FR + 5 NFR + 4 high-risk = **19 requirements**.
