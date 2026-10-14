@@ -1,22 +1,11 @@
 # Task 1 – Requirement Extraction
 
-> **Objective:** Extract clear, testable requirements from the SACDCS scenario so that every later activity (change control, state modelling, test design) has a solid baseline.
+
 
 ## Description
 
 The scenario describes a fleet of autonomous robots that carry vaccines in a sealed conservation chamber from a warehouse to remote clinics. Mission Control supervises the robots over a slow link (delay of several seconds). The scenario contains many sentences, but not every sentence is a usable requirement. As Software Quality Engineering Lead I did the following:
 
-1. Read the scenario and split it into the main concerns: delivery robot life-cycle, conservation chamber, remote link, operator security, Safe Mode, railway crossing and web portal.
-2. Rewrote each concern as one **atomic, testable statement** with a concrete action (command validation, Safe Mode entry, chamber correction, obstacle handling) and, where possible, a number (time, percentage, count).
-3. Classified every statement as **FR**, **NFR** or **Safety** and gave it a **priority** (High / Medium / Low) based on the harm caused by failure.
-4. Chose a **verification method** (Test, Inspection, Analysis, Simulation) so that each requirement can later be proven.
-
-**Contents:** [Functional](#1-functional-requirements-10) · [Non-Functional](#2-non-functional-requirements-5) · [High-Risk](#3-high-risk-requirements-4) · [Summary](#summary)
-
-**Priority rule used:** High = failure can harm people or destroy medicine; Medium = failure degrades service; Low = comfort or convenience.
-
-Format: Req. ID | Requirement | Type | Priority | Verification Method.
-Baseline version **v1.0**. FR-01, FR-07 and NFR-02 are the baselined statements that Mission Control later changes through CR-03, CR-01 and CR-02 (Task 2).
 
 ## 1. Functional Requirements (10)
 
@@ -71,6 +60,4 @@ The baseline contains **19 requirements**. All High-priority items are verified 
 | High-risk (Safety) | 4 |
 | **Total** | **19** |
 
----
 
-[Home](README.md) | [Next](Task2_Change_Requests_RTM.md)
