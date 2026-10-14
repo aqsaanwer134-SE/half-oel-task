@@ -1,12 +1,12 @@
 # Task 2 – Change Requests & Traceability Matrix (RTM)
 
-## Description
+In this task three change requests (CR-01, CR-02, CR-03) are applied to the baseline. The change log shows old text, new text and reason for each one. After that the test cases and the RTM are given, and the last table shows which tests must be run again after each change.
 
-After the baseline (v1.0) was approved, Mission Control sent three Change Requests. Change management means we never silently overwrite a requirement. For every CR the old text, new text and reason are recorded, a new version number is created, and the impact on other artefacts (tests, states, constraints) is identified. The RTM then shows, in one place, how each requirement flows through the lifecycle and which tests must be repeated (regression testing).
+IDs for states (ST, T), operations (OP) and constraints (CON) are defined in Tasks 3, 4 and 5.
 
 ## 1. Version-Controlled Change Log
 
-**What this table shows:** the history of each changed requirement. Each row is one version (v1.1 to v1.3), marked **Modified**, with the old wording, new wording and the reason. This is the audit trail that a real configuration-management tool (Git) would give us, and each CR corresponds to one commit.
+Each change gets a new version number.
 
 | Version | Date | CR | Req. ID | Status | Old text | New text | Reason |
 |---|---|---|---|---|---|---|---|
@@ -19,7 +19,7 @@ Concrete values used for the CR-01 wording: critical chamber temperature below 0
 
 ### Impact of each CR on other items
 
-Impact analysis answers "what else must be updated because of this CR?". It prevents the common mistake of changing a requirement but forgetting its tests and constraints.
+Other items that must be updated because of each CR.
 
 | CR | Affected artefacts |
 |---|---|
@@ -29,7 +29,7 @@ Impact analysis answers "what else must be updated because of this CR?". It prev
 
 ## 2. Why the New Wording Is More Measurable / Testable
 
-**What this table shows:** for each CR, the weakness of the original (vague words such as *critical*, *multiple*, *authenticated*), what the new wording adds (a number, a time limit, a second condition) and a concrete way a tester can check it. A requirement is **measurable** if it contains a quantity, and **testable** if two engineers would reach the same pass/fail verdict.
+The old wording was vague. The new wording has a number or a clear condition, so a tester can say pass or fail.
 
 | CR | Original weakness | What improved | How a tester checks it |
 |---|---|---|---|
@@ -39,6 +39,7 @@ Impact analysis answers "what else must be updated because of this CR?". It prev
 
 ## 3. Test Cases (scenario flow: command received → authenticated → executed → status reported → logged)
 
+The test cases follow the scenario flow: command received, authenticated, executed, status reported, logged.
 
 | TC ID | Scenario step | Description | Input | Expected result | Req. |
 |---|---|---|---|---|---|
@@ -69,6 +70,10 @@ Impact analysis answers "what else must be updated because of this CR?". It prev
 
 ## 4. Multi-Layer RTM
 
+The RTM links each requirement to state, operation, constraint, test case and risk level. A dash means that layer does not apply.
+
+Requirement → State/Transition → Operation → Constraint → Test Case → Risk Level
+
 | Req. ID | State / Transition | Operation | Constraint | Test Case | Risk |
 |---|---|---|---|---|---|
 | FR-01 (v1.3) | Precondition of T-01 | OP-01, OP-02 | CON-13 | TC-01, TC-02, TC-03, TC-20 | High |
@@ -93,32 +98,26 @@ Impact analysis answers "what else must be updated because of this CR?". It prev
 
 ## 5. Regression: Test Cases to Re-run per CR
 
-## Task 2 Summary
-
-| Item | Result |
-|---|---|
-| Requirements modified | 3 (FR-07, NFR-02, FR-01) |
-| New versions created | v1.1, v1.2, v1.3 |
-| Test cases defined | 24 |
-| Tests re-run for CR-01 / CR-02 / CR-03 | 8 / 5 / 7 |
-| Requirements in RTM | 19 (100 % traced to a test) |
+Tests marked Yes must be run again after that CR.
 
 | Test Case | CR-01 | CR-02 | CR-03 | Reason |
 |---|---|---|---|---|
-| TC-01 | – | – | **Yes** | Login is part of the new authentication and authorisation check |
-| TC-02 | – | – | **Yes** | Unauthenticated rejection now belongs to the new wording |
-| TC-03 | – | – | **Yes** | Role authorisation is the core of CR-03 |
-| TC-04 | – | **Yes** | **Yes** | Command acceptance path changed (CR-03). Concurrent commands from 20 robots (CR-02) |
-| TC-05 | **Yes** | **Yes** | – | Safe Mode must be reported (CR-01). Status delay under 20 robots (CR-02) |
-| TC-06 | **Yes** | **Yes** | **Yes** | Log must contain Safe Mode events, load volume and authorisation outcomes |
-| TC-09 | **Yes** | – | – | Critical (20 %) vs emergency (10 %) battery split must stay consistent |
-| TC-10 | **Yes** | – | – | Directly tests CR-01 (battery emergency, 3 s) |
-| TC-11 | **Yes** | – | – | Directly tests CR-01 (chamber temperature, 3 s) |
-| TC-12 | **Yes** | – | – | Directly tests CR-01 (battery temperature, 3 s) |
-| TC-13 | – | **Yes** | – | Directly tests CR-02 |
-| TC-14 | – | **Yes** | – | Boundary of CR-02 |
-| TC-17 | **Yes** | – | – | Safe Mode vs LINK_LOST priority (T-22) |
-| TC-18 | **Yes** | – | – | Door-open leads to Safe Mode in 3 s |
-| TC-20 | – | – | **Yes** | Security wording change |
-| TC-24 | – | – | **Yes** | Illegal commands must still be rejected by authorisation path |
-| TC-07, TC-08, TC-15, TC-16, TC-19, TC-21, TC-22, TC-23 | – | – | – | Not affected (no re-run needed) |
+| TC-01 | – | – | Yes | Login is part of the new authentication and authorisation check |
+| TC-02 | – | – | Yes | Unauthenticated rejection is part of the new wording |
+| TC-03 | – | – | Yes | Role authorisation is the main point of CR-03 |
+| TC-04 | – | Yes | Yes | Command acceptance changed (CR-03). Commands from 20 robots at once (CR-02) |
+| TC-05 | Yes | Yes | – | Safe Mode must be reported (CR-01). Status delay under 20 robots (CR-02) |
+| TC-06 | Yes | Yes | Yes | Log must have Safe Mode events, handle the load and store authorisation results |
+| TC-09 | Yes | – | – | Critical (20 %) and emergency (10 %) battery levels must stay consistent |
+| TC-10 | Yes | – | – | Tests CR-01 directly (battery emergency, 3 s) |
+| TC-11 | Yes | – | – | Tests CR-01 directly (chamber temperature, 3 s) |
+| TC-12 | Yes | – | – | Tests CR-01 directly (battery temperature, 3 s) |
+| TC-13 | – | Yes | – | Tests CR-02 directly |
+| TC-14 | – | Yes | – | Boundary test of CR-02 |
+| TC-17 | Yes | – | – | Safe Mode has priority over LINK_LOST (T-22) |
+| TC-18 | Yes | – | – | Door open leads to Safe Mode within 3 s |
+| TC-20 | – | – | Yes | Security wording changed |
+| TC-24 | – | – | Yes | Illegal commands must still be rejected by the authorisation path |
+| TC-07, TC-08, TC-15, TC-16, TC-19, TC-21, TC-22, TC-23 | – | – | – | Not affected, no re-run needed |
+
+Tests to re-run: CR-01 = 8, CR-02 = 5, CR-03 = 7.
