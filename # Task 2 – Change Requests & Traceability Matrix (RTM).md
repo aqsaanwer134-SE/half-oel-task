@@ -4,12 +4,6 @@
 
 After the baseline (v1.0) was approved, Mission Control sent three Change Requests. Change management means we never silently overwrite a requirement. For every CR the old text, new text and reason are recorded, a new version number is created, and the impact on other artefacts (tests, states, constraints) is identified. The RTM then shows, in one place, how each requirement flows through the lifecycle and which tests must be repeated (regression testing).
 
-**Contents:** [Change log](#1-version-controlled-change-log) · [Testability analysis](#2-why-the-new-wording-is-more-measurable--testable) · [Test cases](#3-test-cases-scenario-flow-command-received--authenticated--executed--status-reported--logged) · [RTM](#4-multi-layer-rtm) · [Regression](#5-regression-test-cases-to-re-run-per-cr)
-
-IDs for states/transitions (ST, T), operations (OP) and constraints (CON) refer to Tasks 3, 4 and 5.
-
-IDs for states/transitions (ST, T), operations (OP), constraints (CON) come from Tasks 3, 4 and 5.
-
 ## 1. Version-Controlled Change Log
 
 **What this table shows:** the history of each changed requirement. Each row is one version (v1.1 to v1.3), marked **Modified**, with the old wording, new wording and the reason. This is the audit trail that a real configuration-management tool (Git) would give us, and each CR corresponds to one commit.
@@ -45,7 +39,6 @@ Impact analysis answers "what else must be updated because of this CR?". It prev
 
 ## 3. Test Cases (scenario flow: command received → authenticated → executed → status reported → logged)
 
-**What this table shows:** 24 test cases. The first six follow the scenario chain *command received → authenticated → executed → status reported → logged*, and the remaining ones cover obstacle, delivery, battery, Safe Mode, load, chamber, railway, link, security and usability. The "Scenario step" column makes the traceability to the scenario explicit.
 
 | TC ID | Scenario step | Description | Input | Expected result | Req. |
 |---|---|---|---|---|---|
@@ -76,10 +69,6 @@ Impact analysis answers "what else must be updated because of this CR?". It prev
 
 ## 4. Multi-Layer RTM
 
-**What this table shows:** the multi-layer traceability chain **Requirement → State/Transition → Operation → Constraint → Test Case → Risk Level**. Reading a row left to right tells us what behaviour implements the requirement, which rule protects it, which test proves it and how dangerous a failure is. Reading right to left tells us why a test exists. Any empty cell (marked "–") means the layer does not apply to that requirement (for example, usability has no state transition).
-
-Requirement → State/Transition → Operation → Constraint → Test Case → Risk Level
-
 | Req. ID | State / Transition | Operation | Constraint | Test Case | Risk |
 |---|---|---|---|---|---|
 | FR-01 (v1.3) | Precondition of T-01 | OP-01, OP-02 | CON-13 | TC-01, TC-02, TC-03, TC-20 | High |
@@ -103,8 +92,6 @@ Requirement → State/Transition → Operation → Constraint → Test Case → 
 | SAF-04 | T-09, invalid T-26, T-27 | OP-03 | CON-09, CON-10 | TC-08, TC-24 | High |
 
 ## 5. Regression: Test Cases to Re-run per CR
-
-**What this table shows:** after a change, only the tests linked to the changed requirement and its neighbours need to be repeated. A "Yes" means the test must be re-run for that CR, with the reason. This saves effort compared with re-running everything, while still protecting against side effects (e.g. CR-01 affects status reporting and logging, not just Safe Mode).
 
 ## Task 2 Summary
 
